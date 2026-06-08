@@ -8,6 +8,8 @@
   --muted: #666;
   --font-mono: "JetBrains Mono", "Fira Mono", monospace;
   --font-sans: "Inter", system-ui, sans-serif;
+  --font-cinzel: "Cinzel", "Times New Roman", serif;
+  --font-cinzel-deco: "Cinzel Decorative", "Times New Roman", serif;
 }
 
 body {
@@ -88,9 +90,10 @@ body {
 }
 
 .shelf-header-left h1 {
-  font-size: 36px;
+  font-family: var(--font-cinzel);
+  font-size: 34px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.05em;
   line-height: 1;
 }
 
@@ -510,9 +513,10 @@ body {
 }
 
 .turntable-info h2 {
-  font-size: 40px;
+  font-family: var(--font-cinzel);
+  font-size: 38px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.05em;
 }
 
 .character-name-img {
@@ -639,6 +643,70 @@ body {
 .play-btn:hover {
   background: color-mix(in srgb, var(--btn-color, #555) 20%, transparent);
   transform: scale(1.05);
+}
+
+/* ── DESIRE INTRO ── */
+.desire-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(5, 3, 8, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease;
+}
+
+.desire-overlay--in  { opacity: 0; }
+.desire-overlay--hold { opacity: 1; }
+.desire-overlay--out  { opacity: 0; }
+
+.desire-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 520px;
+  padding: 0 32px;
+  text-align: center;
+}
+
+.desire-sigil {
+  width: 100px;
+  height: 100px;
+  color: var(--char-color, #888);
+  opacity: 0.6;
+  animation: sigil-rotate 12s linear infinite;
+}
+
+@keyframes sigil-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.desire-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.desire-text {
+  font-family: var(--font-cinzel);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  font-style: italic;
+}
+
+.desire-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.7;
 }
 
 /* ── CHARACTER PICKER ── */
