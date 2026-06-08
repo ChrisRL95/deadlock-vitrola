@@ -1,5 +1,6 @@
 import Disc from "./Disc";
 
+const R2 = "https://pub-52e2be368e3442e2ac570de63276fa30.r2.dev";
 const COLS = 4;
 
 function PlaceholderDisc() {
@@ -31,8 +32,8 @@ export default function Shelf({ characters, onSelect }) {
   return (
     <div className="shelf-page">
       <div className="shelf-bg">
-        <img src="/images/HiddenKing.png" alt="" className="shelf-bg-left" />
-        <img src="/images/Archmother.png" alt="" className="shelf-bg-right" />
+        <img src={`${R2}/images/HiddenKing.png`} alt="" className="shelf-bg-left" />
+        <img src={`${R2}/images/Archmother.png`} alt="" className="shelf-bg-right" />
       </div>
       <header className="shelf-header">
         <div className="shelf-header-left">
