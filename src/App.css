@@ -747,6 +747,16 @@ body {
   object-fit: cover;
 }
 
+.char-picker-empty {
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  text-align: center;
+}
+
 .char-picker-dot {
   width: 5px;
   height: 5px;

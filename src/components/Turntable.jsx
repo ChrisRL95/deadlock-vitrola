@@ -162,7 +162,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       <div className="turntable-layout">
 
         {/* Character picker sidebar */}
-        {characters.length > 1 && (
+        {(
           <div className="char-picker-sidebar">
             <button
               className="char-picker-toggle"
@@ -186,23 +186,24 @@ export default function Turntable({ character, characters = [], onBack, onSelect
 
             {pickerOpen && (
               <div className="char-picker-dropdown">
-                {characters.filter((c) => c.id !== character.id).map((c) => (
-                  <button
-                    key={c.id}
-                    className="char-picker-item"
-                    onClick={() => handleSelectCharacter(c)}
-                    style={{ "--item-color": c.color }}
-                  >
-                    <div
-                      className="char-picker-thumb"
-                      style={{ background: c.color }}
+                {characters.filter((c) => c.id !== character.id).length === 0 ? (
+                  <div className="char-picker-empty">mais personagens em breve</div>
+                ) : (
+                  characters.filter((c) => c.id !== character.id).map((c) => (
+                    <button
+                      key={c.id}
+                      className="char-picker-item"
+                      onClick={() => handleSelectCharacter(c)}
+                      style={{ "--item-color": c.color }}
                     >
-                      {c.image && <img src={c.image} alt={c.name} />}
-                    </div>
-                    <span>{c.name}</span>
-                    <div className="char-picker-dot" style={{ background: c.color }} />
-                  </button>
-                ))}
+                      <div className="char-picker-thumb" style={{ background: c.color }}>
+                        {c.image && <img src={c.image} alt={c.name} />}
+                      </div>
+                      <span>{c.name}</span>
+                      <div className="char-picker-dot" style={{ background: c.color }} />
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
