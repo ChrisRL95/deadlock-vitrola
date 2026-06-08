@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useScratchSound } from "../hooks/useScratchSound";
 
 // 33 RPM → degrees per ms (normal playback speed reference)
 const NORMAL_DEG_PER_MS = (33 * 360) / (60 * 1000); // ≈ 0.198 °/ms
@@ -39,6 +40,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const discAngleRef = useRef(0);
   const lastSpinTimeRef = useRef(null);
   const spindownRafRef = useRef(null);
+  const scratch = useScratchSound();
   const playingRef = useRef(false);   // shadow for rAF callbacks
   const wasPlayingRef = useRef(false); // was playing before drag started
 
@@ -172,6 +174,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       audioRef.current.pause();
       audioRef.current.playbackRate = 1.0;
     }
+    scratch.start();
   }
 
   const onMouseMove = useCallback((e) => {
@@ -196,16 +199,22 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       return next;
     });
 
-    // scratch: play forward proportional to drag speed, silence on backward
+    // scratch sound + audio scrub
     if (audioRef.current && dt > 0) {
       const degPerMs = delta / dt;
+      const absDegPerMs = Math.abs(degPerMs);
+      const normalizedSpeed = absDegPerMs / NORMAL_DEG_PER_MS; // 1.0 = normal speed
+
+      // scratch sound proportional to speed regardless of direction
+      scratch.setSpeed(normalizedSpeed);
+
       if (degPerMs > 0.02) {
-        // dragging forward — play at proportional speed
-        const rate = Math.min(degPerMs / NORMAL_DEG_PER_MS, 3.0);
+        // dragging forward — play audio at proportional rate
+        const rate = Math.min(normalizedSpeed, 3.0);
         audioRef.current.playbackRate = rate;
         if (audioRef.current.paused) audioRef.current.play().catch(() => {});
       } else {
-        // dragging backward or stopped — silence
+        // dragging backward or stopped — mute audio
         if (!audioRef.current.paused) audioRef.current.pause();
         audioRef.current.playbackRate = 1.0;
       }
@@ -216,6 +225,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     setIsDragging(false);
     lastAngleRef.current = null;
     lastDragTimeRef.current = null;
+    scratch.stop();
     if (audioRef.current) {
       if (wasPlayingRef.current) {
         // resume and ramp back to normal speed
