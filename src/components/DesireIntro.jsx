@@ -5,8 +5,8 @@ export default function DesireIntro({ character, onDone }) {
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase("hold"), 600);
-    const t2 = setTimeout(() => setPhase("out"), 2200);
-    const t3 = setTimeout(() => onDone(), 2900);
+    const t2 = setTimeout(() => setPhase("out"), 4300);
+    const t3 = setTimeout(() => onDone(), 5000);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
