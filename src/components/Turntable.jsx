@@ -38,7 +38,8 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const rafRef = useRef(null);
   const discAngleRef = useRef(0);
   const lastSpinTimeRef = useRef(null);
-  const playingRef = useRef(false); // shadow for rAF callbacks
+  const playingRef = useRef(false);   // shadow for rAF callbacks
+  const wasPlayingRef = useRef(false); // was playing before drag started
 
   const tracks = character.tracks;
 
@@ -102,12 +103,13 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   function togglePlay() {
     if (!audioRef.current) return;
     if (playing) {
-      // spin-down: ramp rate to 0, then pause
-      rampRate(audioRef.current, audioRef.current.playbackRate, 0, 550, () => {
-        audioRef.current?.pause();
-        if (audioRef.current) audioRef.current.playbackRate = 1;
-      });
+      // spin-down: quick ramp then pause
+      const audio = audioRef.current;
       setPlaying(false);
+      rampRate(audio, audio.playbackRate, 0.05, 220, () => {
+        audio.pause();
+        audio.playbackRate = 1.0;
+      });
     } else {
       audioRef.current.playbackRate = 0.25;
       audioRef.current.play();
@@ -155,8 +157,12 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     setIsDragging(true);
     lastAngleRef.current = getAngle(e, discRef.current);
     lastDragTimeRef.current = performance.now();
-    // freeze playback while holding
-    if (audioRef.current) audioRef.current.playbackRate = 0;
+    wasPlayingRef.current = playingRef.current;
+    // pause audio while holding — resume on release
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.playbackRate = 1.0;
+    }
   }
 
   const onMouseMove = useCallback((e) => {
@@ -181,14 +187,19 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       return next;
     });
 
-    // scratch: map angular velocity to playbackRate
+    // scratch: play forward proportional to drag speed, silence on backward
     if (audioRef.current && dt > 0) {
       const degPerMs = delta / dt;
-      // forward: positive rate proportional to speed; backward: 0
-      const rate = degPerMs > 0
-        ? Math.min(degPerMs / NORMAL_DEG_PER_MS, 3.0)
-        : 0;
-      audioRef.current.playbackRate = rate;
+      if (degPerMs > 0.02) {
+        // dragging forward — play at proportional speed
+        const rate = Math.min(degPerMs / NORMAL_DEG_PER_MS, 3.0);
+        audioRef.current.playbackRate = rate;
+        if (audioRef.current.paused) audioRef.current.play().catch(() => {});
+      } else {
+        // dragging backward or stopped — silence
+        if (!audioRef.current.paused) audioRef.current.pause();
+        audioRef.current.playbackRate = 1.0;
+      }
     }
   }, [isDragging, duration]);
 
@@ -196,11 +207,14 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     setIsDragging(false);
     lastAngleRef.current = null;
     lastDragTimeRef.current = null;
-    // ramp back to normal speed if playing
     if (audioRef.current) {
-      if (playingRef.current) {
-        rampRate(audioRef.current, audioRef.current.playbackRate, 1.0, 400);
+      if (wasPlayingRef.current) {
+        // resume and ramp back to normal speed
+        audioRef.current.playbackRate = 0.3;
+        audioRef.current.play().catch(() => {});
+        rampRate(audioRef.current, 0.3, 1.0, 400);
       } else {
+        audioRef.current.pause();
         audioRef.current.playbackRate = 1.0;
       }
     }
