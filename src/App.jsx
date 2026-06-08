@@ -10,7 +10,12 @@ function App() {
   return (
     <div className="app">
       {selected ? (
-        <Turntable character={selected} onBack={() => setSelected(null)} />
+        <Turntable
+          character={selected}
+          characters={characters}
+          onBack={() => setSelected(null)}
+          onSelect={setSelected}
+        />
       ) : (
         <Shelf characters={characters} onSelect={setSelected} />
       )}

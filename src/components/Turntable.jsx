@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-export default function Turntable({ character, onBack }) {
+export default function Turntable({ character, characters = [], onBack, onSelect }) {
   const [elapsed, setElapsed] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [duration, setDuration] = useState(0);
-  const [scrubAngle, setScrubAngle] = useState(0); // visual rotation from scrubbing
+  const [scrubAngle, setScrubAngle] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -16,7 +17,6 @@ export default function Turntable({ character, onBack }) {
 
   const tracks = character.tracks;
 
-  // Determine current track based on elapsed time (in minutes)
   useEffect(() => {
     const elapsedMin = elapsed / 60;
     let idx = 0;
@@ -26,7 +26,6 @@ export default function Turntable({ character, onBack }) {
     if (idx !== currentTrackIndex) setCurrentTrackIndex(idx);
   }, [elapsed, tracks]);
 
-  // Load and play new track when index changes
   useEffect(() => {
     if (!audioRef.current) return;
     const wasPlaying = playing;
@@ -38,7 +37,6 @@ export default function Turntable({ character, onBack }) {
     if (wasPlaying) audioRef.current.play();
   }, [currentTrackIndex]);
 
-  // Timer
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
@@ -72,6 +70,11 @@ export default function Turntable({ character, onBack }) {
     return `${m}:${s}`;
   }
 
+  function handleSelectCharacter(char) {
+    setPickerOpen(false);
+    if (onSelect) onSelect(char);
+  }
+
   // ── Disc scrub ──
   function getAngle(e, el) {
     const rect = el.getBoundingClientRect();
@@ -100,7 +103,6 @@ export default function Turntable({ character, onBack }) {
     const delta = normalizeDelta(newAngle - lastAngleRef.current);
     lastAngleRef.current = newAngle;
 
-    // 360° = 30 seconds of audio
     const deltaSeconds = (delta / 360) * 30;
     setScrubAngle((a) => a + delta);
 
@@ -142,7 +144,6 @@ export default function Turntable({ character, onBack }) {
     ? ANGLE_START + (ANGLE_END - ANGLE_START) * progress
     : ANGLE_REST;
 
-  // spin animation degrees from playing + scrub
   const spinDeg = scrubAngle;
 
   return (
@@ -150,6 +151,7 @@ export default function Turntable({ character, onBack }) {
       {character.render && (
         <img src={character.render} alt="" className="turntable-render" />
       )}
+
       <button className="back-btn" onClick={onBack}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -158,6 +160,54 @@ export default function Turntable({ character, onBack }) {
       </button>
 
       <div className="turntable-layout">
+
+        {/* Character picker sidebar */}
+        {characters.length > 1 && (
+          <div className="char-picker-sidebar">
+            <button
+              className="char-picker-toggle"
+              style={{ "--btn-color": character.color }}
+              onClick={() => setPickerOpen((o) => !o)}
+              title="Trocar personagem"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.2"/>
+                <circle cx="9" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M4 15c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              <span>Trocar disco</span>
+              <svg
+                width="10" height="10" viewBox="0 0 10 10" fill="none"
+                style={{ transform: pickerOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+              >
+                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+            </button>
+
+            {pickerOpen && (
+              <div className="char-picker-dropdown">
+                {characters.filter((c) => c.id !== character.id).map((c) => (
+                  <button
+                    key={c.id}
+                    className="char-picker-item"
+                    onClick={() => handleSelectCharacter(c)}
+                    style={{ "--item-color": c.color }}
+                  >
+                    <div
+                      className="char-picker-thumb"
+                      style={{ background: c.color }}
+                    >
+                      {c.image && <img src={c.image} alt={c.name} />}
+                    </div>
+                    <span>{c.name}</span>
+                    <div className="char-picker-dot" style={{ background: c.color }} />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Disc */}
         <div className="turntable-disc-area">
           <div
@@ -204,7 +254,6 @@ export default function Turntable({ character, onBack }) {
             <p className="character-description">{character.description}</p>
           )}
 
-          {/* Progress bar */}
           <div className="progress-bar-wrapper">
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${progress * 100}%`, background: character.color }} />
@@ -215,7 +264,6 @@ export default function Turntable({ character, onBack }) {
             </div>
           </div>
 
-          {/* Controls */}
           <div className="controls-row">
             <button className="play-btn" onClick={togglePlay}
                     style={{ "--btn-color": character.color }}>
