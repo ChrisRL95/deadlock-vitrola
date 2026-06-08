@@ -389,7 +389,11 @@ export default function Turntable({ character, characters = [], onBack, onSelect
               title="Clique para navegar"
             >
               <div className="progress-fill" style={{ width: `${progress * 100}%`, background: accentColor }} />
-              <div className="progress-thumb" style={{ left: `${progress * 100}%`, background: accentColor }} />
+              {character.icon ? (
+                <img src={character.icon} className="progress-thumb progress-thumb--icon" alt="" style={{ left: `${progress * 100}%`, borderColor: accentColor, boxShadow: `0 0 8px ${accentColor}88` }} />
+              ) : (
+                <div className="progress-thumb" style={{ left: `${progress * 100}%`, background: accentColor }} />
+              )}
             </div>
             <div className="progress-times">
               <span>{formatTime(elapsed)}</span>

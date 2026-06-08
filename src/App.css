@@ -582,8 +582,21 @@ body {
   box-shadow: 0 0 6px rgba(0,0,0,0.5);
 }
 
+.progress-thumb--icon {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border: 2px solid;
+  background: #0d0d0d;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
 .progress-bar:hover .progress-thumb {
   opacity: 1;
+}
+
+.progress-bar:hover .progress-thumb--icon {
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
 .progress-times {
