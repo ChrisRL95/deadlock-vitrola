@@ -1,12 +1,31 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
+// 33 RPM → degrees per ms (normal playback speed reference)
+const NORMAL_DEG_PER_MS = (33 * 360) / (60 * 1000); // ≈ 0.198 °/ms
+
+function rampRate(audioEl, fromRate, toRate, durationMs, onDone) {
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / durationMs, 1);
+    // ease-out curve
+    const eased = 1 - Math.pow(1 - t, 2);
+    audioEl.playbackRate = fromRate + (toRate - fromRate) * eased;
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      audioEl.playbackRate = toRate;
+      if (onDone) onDone();
+    }
+  };
+  requestAnimationFrame(step);
+}
+
 export default function Turntable({ character, characters = [], onBack, onSelect }) {
   const [elapsed, setElapsed] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [duration, setDuration] = useState(0);
-  const [scrubAngle, setScrubAngle] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [discAngle, setDiscAngle] = useState(0);
@@ -15,12 +34,18 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const intervalRef = useRef(null);
   const discRef = useRef(null);
   const lastAngleRef = useRef(null);
+  const lastDragTimeRef = useRef(null);
   const rafRef = useRef(null);
   const discAngleRef = useRef(0);
-  const lastTimeRef = useRef(null);
+  const lastSpinTimeRef = useRef(null);
+  const playingRef = useRef(false); // shadow for rAF callbacks
 
   const tracks = character.tracks;
 
+  // keep playingRef in sync
+  useEffect(() => { playingRef.current = playing; }, [playing]);
+
+  // Track selection
   useEffect(() => {
     const elapsedMin = elapsed / 60;
     let idx = 0;
@@ -30,10 +55,12 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     if (idx !== currentTrackIndex) setCurrentTrackIndex(idx);
   }, [elapsed, tracks]);
 
+  // Load track
   useEffect(() => {
     if (!audioRef.current) return;
     const wasPlaying = playing;
     audioRef.current.src = tracks[currentTrackIndex].file;
+    audioRef.current.preservesPitch = false; // pitch follows speed (vinyl feel)
     audioRef.current.load();
     audioRef.current.onloadedmetadata = () => {
       if (audioRef.current) setDuration(audioRef.current.duration);
@@ -41,33 +68,29 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     if (wasPlaying) audioRef.current.play();
   }, [currentTrackIndex]);
 
-  // Timer + disc spin via rAF
+  // Timer + disc rAF spin
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setElapsed((e) => {
-          if (audioRef.current) return audioRef.current.currentTime;
-          return e + 1;
-        });
+        setElapsed(() => audioRef.current?.currentTime ?? 0);
       }, 250);
 
-      // 33 RPM = 198°/s
-      const DEGREES_PER_MS = (33 * 360) / (60 * 1000);
-      lastTimeRef.current = null;
+      lastSpinTimeRef.current = null;
       const spin = (timestamp) => {
-        if (lastTimeRef.current !== null) {
-          const delta = timestamp - lastTimeRef.current;
-          discAngleRef.current = (discAngleRef.current + delta * DEGREES_PER_MS) % 360;
+        if (lastSpinTimeRef.current !== null) {
+          const delta = timestamp - lastSpinTimeRef.current;
+          const rate = audioRef.current?.playbackRate ?? 1;
+          discAngleRef.current = (discAngleRef.current + delta * NORMAL_DEG_PER_MS * rate) % 360;
           setDiscAngle(discAngleRef.current);
         }
-        lastTimeRef.current = timestamp;
+        lastSpinTimeRef.current = timestamp;
         rafRef.current = requestAnimationFrame(spin);
       };
       rafRef.current = requestAnimationFrame(spin);
     } else {
       clearInterval(intervalRef.current);
       cancelAnimationFrame(rafRef.current);
-      lastTimeRef.current = null;
+      lastSpinTimeRef.current = null;
     }
     return () => {
       clearInterval(intervalRef.current);
@@ -75,11 +98,23 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     };
   }, [playing]);
 
+  // ── Play / Pause with spin-up / spin-down ──
   function togglePlay() {
     if (!audioRef.current) return;
-    if (playing) { audioRef.current.pause(); }
-    else { audioRef.current.play(); }
-    setPlaying((p) => !p);
+    if (playing) {
+      // spin-down: ramp rate to 0, then pause
+      rampRate(audioRef.current, audioRef.current.playbackRate, 0, 550, () => {
+        audioRef.current?.pause();
+        if (audioRef.current) audioRef.current.playbackRate = 1;
+      });
+      setPlaying(false);
+    } else {
+      audioRef.current.playbackRate = 0.25;
+      audioRef.current.play();
+      setPlaying(true);
+      // spin-up: ramp from 0.25 to 1.0
+      rampRate(audioRef.current, 0.25, 1.0, 700);
+    }
   }
 
   function handleVolume(e) {
@@ -99,7 +134,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     if (onSelect) onSelect(char);
   }
 
-  // ── Disc scrub ──
+  // ── Disc drag / scratch ──
   function getAngle(e, el) {
     const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
@@ -119,30 +154,56 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     e.preventDefault();
     setIsDragging(true);
     lastAngleRef.current = getAngle(e, discRef.current);
+    lastDragTimeRef.current = performance.now();
+    // freeze playback while holding
+    if (audioRef.current) audioRef.current.playbackRate = 0;
   }
 
   const onMouseMove = useCallback((e) => {
     if (!isDragging || lastAngleRef.current === null) return;
+    const now = performance.now();
     const newAngle = getAngle(e, discRef.current);
     const delta = normalizeDelta(newAngle - lastAngleRef.current);
+    const dt = now - (lastDragTimeRef.current ?? now);
     lastAngleRef.current = newAngle;
+    lastDragTimeRef.current = now;
 
-    const deltaSeconds = (delta / 360) * 30;
+    // visual rotation
     discAngleRef.current = (discAngleRef.current + delta) % 360;
     setDiscAngle(discAngleRef.current);
-    setScrubAngle((a) => a + delta);
 
+    // scrub audio position: 360° = 30s
+    const deltaSeconds = (delta / 360) * 30;
     setElapsed((prev) => {
       const total = duration || 3600;
       const next = Math.max(0, Math.min(total, prev + deltaSeconds));
       if (audioRef.current) audioRef.current.currentTime = next;
       return next;
     });
+
+    // scratch: map angular velocity to playbackRate
+    if (audioRef.current && dt > 0) {
+      const degPerMs = delta / dt;
+      // forward: positive rate proportional to speed; backward: 0
+      const rate = degPerMs > 0
+        ? Math.min(degPerMs / NORMAL_DEG_PER_MS, 3.0)
+        : 0;
+      audioRef.current.playbackRate = rate;
+    }
   }, [isDragging, duration]);
 
   const onMouseUp = useCallback(() => {
     setIsDragging(false);
     lastAngleRef.current = null;
+    lastDragTimeRef.current = null;
+    // ramp back to normal speed if playing
+    if (audioRef.current) {
+      if (playingRef.current) {
+        rampRate(audioRef.current, audioRef.current.playbackRate, 1.0, 400);
+      } else {
+        audioRef.current.playbackRate = 1.0;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -170,8 +231,6 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     ? ANGLE_START + (ANGLE_END - ANGLE_START) * progress
     : ANGLE_REST;
 
-  const spinDeg = scrubAngle;
-
   return (
     <div className="turntable-page">
       {character.render && (
@@ -188,52 +247,50 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       <div className="turntable-layout">
 
         {/* Character picker sidebar */}
-        {(
-          <div className="char-picker-sidebar">
-            <button
-              className="char-picker-toggle"
-              style={{ "--btn-color": character.color }}
-              onClick={() => setPickerOpen((o) => !o)}
-              title="Trocar personagem"
+        <div className="char-picker-sidebar">
+          <button
+            className="char-picker-toggle"
+            style={{ "--btn-color": character.color }}
+            onClick={() => setPickerOpen((o) => !o)}
+            title="Trocar personagem"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.2"/>
+              <circle cx="9" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M4 15c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            <span>Trocar disco</span>
+            <svg
+              width="10" height="10" viewBox="0 0 10 10" fill="none"
+              style={{ transform: pickerOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.2"/>
-                <circle cx="9" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M4 15c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-              <span>Trocar disco</span>
-              <svg
-                width="10" height="10" viewBox="0 0 10 10" fill="none"
-                style={{ transform: pickerOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
-              >
-                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-              </svg>
-            </button>
+              <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            </svg>
+          </button>
 
-            {pickerOpen && (
-              <div className="char-picker-dropdown">
-                {characters.filter((c) => c.id !== character.id).length === 0 ? (
-                  <div className="char-picker-empty">mais personagens em breve</div>
-                ) : (
-                  characters.filter((c) => c.id !== character.id).map((c) => (
-                    <button
-                      key={c.id}
-                      className="char-picker-item"
-                      onClick={() => handleSelectCharacter(c)}
-                      style={{ "--item-color": c.color }}
-                    >
-                      <div className="char-picker-thumb" style={{ background: c.color }}>
-                        {c.image && <img src={c.image} alt={c.name} />}
-                      </div>
-                      <span>{c.name}</span>
-                      <div className="char-picker-dot" style={{ background: c.color }} />
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        )}
+          {pickerOpen && (
+            <div className="char-picker-dropdown">
+              {characters.filter((c) => c.id !== character.id).length === 0 ? (
+                <div className="char-picker-empty">mais personagens em breve</div>
+              ) : (
+                characters.filter((c) => c.id !== character.id).map((c) => (
+                  <button
+                    key={c.id}
+                    className="char-picker-item"
+                    onClick={() => handleSelectCharacter(c)}
+                    style={{ "--item-color": c.color }}
+                  >
+                    <div className="char-picker-thumb" style={{ background: c.color }}>
+                      {c.image && <img src={c.image} alt={c.name} />}
+                    </div>
+                    <span>{c.name}</span>
+                    <div className="char-picker-dot" style={{ background: c.color }} />
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Disc */}
         <div className="turntable-disc-area">
