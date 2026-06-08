@@ -38,6 +38,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const rafRef = useRef(null);
   const discAngleRef = useRef(0);
   const lastSpinTimeRef = useRef(null);
+  const spindownRafRef = useRef(null);
   const playingRef = useRef(false);   // shadow for rAF callbacks
   const wasPlayingRef = useRef(false); // was playing before drag started
 
@@ -103,18 +104,26 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   function togglePlay() {
     if (!audioRef.current) return;
     if (playing) {
-      // spin-down: quick ramp then pause
-      const audio = audioRef.current;
+      // pause audio immediately
+      audioRef.current.pause();
+      audioRef.current.playbackRate = 1.0;
       setPlaying(false);
-      rampRate(audio, audio.playbackRate, 0.05, 220, () => {
-        audio.pause();
-        audio.playbackRate = 1.0;
-      });
+      // visual spin-down: disc decelerates over ~600ms
+      cancelAnimationFrame(spindownRafRef.current);
+      const startTime = performance.now();
+      const spinDown = (now) => {
+        const t = Math.min((now - startTime) / 600, 1);
+        const rate = 1 - t; // linear deceleration
+        discAngleRef.current = (discAngleRef.current + NORMAL_DEG_PER_MS * 16 * rate) % 360;
+        setDiscAngle(discAngleRef.current);
+        if (t < 1) spindownRafRef.current = requestAnimationFrame(spinDown);
+      };
+      spindownRafRef.current = requestAnimationFrame(spinDown);
     } else {
+      // spin-up: start quiet then ramp pitch to normal
       audioRef.current.playbackRate = 0.25;
       audioRef.current.play();
       setPlaying(true);
-      // spin-up: ramp from 0.25 to 1.0
       rampRate(audioRef.current, 0.25, 1.0, 700);
     }
   }
