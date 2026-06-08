@@ -9,11 +9,15 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const [scrubAngle, setScrubAngle] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [discAngle, setDiscAngle] = useState(0);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
   const discRef = useRef(null);
   const lastAngleRef = useRef(null);
+  const rafRef = useRef(null);
+  const discAngleRef = useRef(0);
+  const lastTimeRef = useRef(null);
 
   const tracks = character.tracks;
 
@@ -37,6 +41,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     if (wasPlaying) audioRef.current.play();
   }, [currentTrackIndex]);
 
+  // Timer + disc spin via rAF
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
@@ -45,10 +50,29 @@ export default function Turntable({ character, characters = [], onBack, onSelect
           return e + 1;
         });
       }, 250);
+
+      // 33 RPM = 198°/s
+      const DEGREES_PER_MS = (33 * 360) / (60 * 1000);
+      lastTimeRef.current = null;
+      const spin = (timestamp) => {
+        if (lastTimeRef.current !== null) {
+          const delta = timestamp - lastTimeRef.current;
+          discAngleRef.current = (discAngleRef.current + delta * DEGREES_PER_MS) % 360;
+          setDiscAngle(discAngleRef.current);
+        }
+        lastTimeRef.current = timestamp;
+        rafRef.current = requestAnimationFrame(spin);
+      };
+      rafRef.current = requestAnimationFrame(spin);
     } else {
       clearInterval(intervalRef.current);
+      cancelAnimationFrame(rafRef.current);
+      lastTimeRef.current = null;
     }
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      clearInterval(intervalRef.current);
+      cancelAnimationFrame(rafRef.current);
+    };
   }, [playing]);
 
   function togglePlay() {
@@ -104,6 +128,8 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     lastAngleRef.current = newAngle;
 
     const deltaSeconds = (delta / 360) * 30;
+    discAngleRef.current = (discAngleRef.current + delta) % 360;
+    setDiscAngle(discAngleRef.current);
     setScrubAngle((a) => a + delta);
 
     setElapsed((prev) => {
@@ -213,10 +239,10 @@ export default function Turntable({ character, characters = [], onBack, onSelect
         <div className="turntable-disc-area">
           <div
             ref={discRef}
-            className={`turntable-disc ${playing && !isDragging ? "spinning" : ""}`}
+            className="turntable-disc"
             style={{
               "--disc-color": character.color,
-              transform: isDragging ? `rotate(${spinDeg}deg)` : undefined,
+              transform: `rotate(${discAngle}deg)`,
               cursor: isDragging ? "grabbing" : "grab",
             }}
             onMouseDown={onDiscMouseDown}
