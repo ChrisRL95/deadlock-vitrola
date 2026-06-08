@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useDominantColor } from "../hooks/useDominantColor";
 
 // 33 RPM → degrees per ms (normal playback speed reference)
 const NORMAL_DEG_PER_MS = (33 * 360) / (60 * 1000); // ≈ 0.198 °/ms
@@ -30,6 +31,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const [pickerOpen, setPickerOpen] = useState(false);
   const [discAngle, setDiscAngle] = useState(0);
   const [loop, setLoop] = useState(false);
+  const accentColor = useDominantColor(character.render || character.image, character.color);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -292,7 +294,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
         <div className="char-picker-sidebar">
           <button
             className="char-picker-toggle"
-            style={{ "--btn-color": character.color }}
+            style={{ "--btn-color": accentColor }}
             onClick={() => setPickerOpen((o) => !o)}
             title="Trocar personagem"
           >
@@ -340,7 +342,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
             ref={discRef}
             className="turntable-disc"
             style={{
-              "--disc-color": character.color,
+              "--disc-color": accentColor,
               transform: `rotate(${discAngle}deg)`,
               cursor: isDragging ? "grabbing" : "grab",
             }}
@@ -386,8 +388,8 @@ export default function Turntable({ character, characters = [], onBack, onSelect
               onClick={handleSeek}
               title="Clique para navegar"
             >
-              <div className="progress-fill" style={{ width: `${progress * 100}%`, background: character.color }} />
-              <div className="progress-thumb" style={{ left: `${progress * 100}%`, background: character.color }} />
+              <div className="progress-fill" style={{ width: `${progress * 100}%`, background: accentColor }} />
+              <div className="progress-thumb" style={{ left: `${progress * 100}%`, background: accentColor }} />
             </div>
             <div className="progress-times">
               <span>{formatTime(elapsed)}</span>
@@ -397,13 +399,13 @@ export default function Turntable({ character, characters = [], onBack, onSelect
 
           <div className="controls-row">
             <button className="play-btn" onClick={togglePlay}
-                    style={{ "--btn-color": character.color }}>
+                    style={{ "--btn-color": accentColor }}>
               {playing ? "⏸" : "▶"}
             </button>
             <button
               className={`loop-btn ${loop ? "loop-btn--active" : ""}`}
               onClick={toggleLoop}
-              style={{ "--btn-color": character.color }}
+              style={{ "--btn-color": accentColor }}
               title={loop ? "Loop ativado" : "Loop desativado"}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -419,7 +421,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
                 type="range" min="0" max="1" step="0.01"
                 value={volume} onChange={handleVolume}
                 className="volume-slider"
-                style={{ "--vol-color": character.color }}
+                style={{ "--vol-color": accentColor }}
               />
             </div>
           </div>
