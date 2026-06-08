@@ -29,6 +29,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const [isDragging, setIsDragging] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [discAngle, setDiscAngle] = useState(0);
+  const [loop, setLoop] = useState(false);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -132,6 +133,21 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     const v = parseFloat(e.target.value);
     setVolume(v);
     if (audioRef.current) audioRef.current.volume = v;
+  }
+
+  function handleSeek(e) {
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newTime = ratio * (duration || 3600);
+    if (audioRef.current) audioRef.current.currentTime = newTime;
+    setElapsed(newTime);
+  }
+
+  function toggleLoop() {
+    const next = !loop;
+    setLoop(next);
+    if (audioRef.current) audioRef.current.loop = next;
   }
 
   function formatTime(secs) {
@@ -365,8 +381,13 @@ export default function Turntable({ character, characters = [], onBack, onSelect
           )}
 
           <div className="progress-bar-wrapper">
-            <div className="progress-bar">
+            <div
+              className="progress-bar"
+              onClick={handleSeek}
+              title="Clique para navegar"
+            >
               <div className="progress-fill" style={{ width: `${progress * 100}%`, background: character.color }} />
+              <div className="progress-thumb" style={{ left: `${progress * 100}%`, background: character.color }} />
             </div>
             <div className="progress-times">
               <span>{formatTime(elapsed)}</span>
@@ -378,6 +399,19 @@ export default function Turntable({ character, characters = [], onBack, onSelect
             <button className="play-btn" onClick={togglePlay}
                     style={{ "--btn-color": character.color }}>
               {playing ? "⏸" : "▶"}
+            </button>
+            <button
+              className={`loop-btn ${loop ? "loop-btn--active" : ""}`}
+              onClick={toggleLoop}
+              style={{ "--btn-color": character.color }}
+              title={loop ? "Loop ativado" : "Loop desativado"}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 4h10a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                <path d="M14 12H4a2 2 0 0 1-2-2V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                <path d="M11 2l3 2-3 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M5 14l-3-2 3-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
             <div className="volume-control">
               <span className="volume-icon">{volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}</span>
