@@ -588,7 +588,8 @@ body {
   object-fit: cover;
   border: 2px solid;
   background: #0d0d0d;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  opacity: 1 !important;
+  transition: transform 0.15s ease;
 }
 
 .progress-bar:hover .progress-thumb {
