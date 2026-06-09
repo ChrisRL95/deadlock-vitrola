@@ -135,13 +135,19 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       audioRef.current.pause();
       audioRef.current.playbackRate = 1.0;
       setPlaying(false);
-      // visual spin-down: disc decelerates over ~600ms
+      // cancel main spin loop NOW (don't wait for useEffect) to avoid double-advance
+      cancelAnimationFrame(rafRef.current);
+      // visual spin-down: disc decelerates over ~600ms using real delta time
       cancelAnimationFrame(spindownRafRef.current);
-      const startTime = performance.now();
+      let lastT = performance.now();
+      const startTime = lastT;
       const spinDown = (now) => {
-        const t = Math.min((now - startTime) / 600, 1);
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / 600, 1);
         const rate = 1 - t; // linear deceleration
-        discAngleRef.current = (discAngleRef.current + NORMAL_DEG_PER_MS * 16 * rate) % 360;
+        const delta = now - lastT;
+        lastT = now;
+        discAngleRef.current = (discAngleRef.current + delta * NORMAL_DEG_PER_MS * rate) % 360;
         setDiscAngle(discAngleRef.current);
         if (t < 1) spindownRafRef.current = requestAnimationFrame(spinDown);
       };
