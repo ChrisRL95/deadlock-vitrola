@@ -4,6 +4,18 @@ import { useDominantColor } from "../hooks/useDominantColor";
 // 33 RPM → degrees per ms (normal playback speed reference)
 const NORMAL_DEG_PER_MS = (33 * 360) / (60 * 1000); // ≈ 0.198 °/ms
 
+// Static dust particle specs — positions/sizes/timings are intentionally varied
+const DUST_SPECS = [
+  { top: "27%", left: "21%", delay: "0s",    dur: "4.3s", size: 1.5 },
+  { top: "44%", left: "70%", delay: "1.4s",  dur: "5.9s", size: 1   },
+  { top: "71%", left: "37%", delay: "0.6s",  dur: "3.8s", size: 2   },
+  { top: "19%", left: "56%", delay: "2.2s",  dur: "6.2s", size: 1   },
+  { top: "61%", left: "79%", delay: "0.3s",  dur: "4.8s", size: 1.5 },
+  { top: "34%", left: "14%", delay: "1.9s",  dur: "5.4s", size: 1   },
+  { top: "81%", left: "58%", delay: "3.1s",  dur: "4.6s", size: 2   },
+  { top: "14%", left: "42%", delay: "2.6s",  dur: "7.1s", size: 1   },
+];
+
 function rampRate(audioEl, fromRate, toRate, durationMs, onDone) {
   const start = performance.now();
   const step = (now) => {
@@ -378,6 +390,22 @@ export default function Turntable({ character, characters = [], onBack, onSelect
               )}
             </div>
           </div>
+
+          {/* Fixed light reflection — stays in place while disc rotates beneath */}
+          <div className="vinyl-shine" />
+
+          {/* Dust particles — appear while playing */}
+          <div className={`dust-particles${playing ? " dust-active" : ""}`}>
+            {DUST_SPECS.map((d, i) => (
+              <span key={i} className="dust-particle" style={{
+                top: d.top, left: d.left,
+                width: d.size + "px", height: d.size + "px",
+                animationDelay: d.delay,
+                animationDuration: d.dur,
+              }} />
+            ))}
+          </div>
+
           {/* Tonearm */}
           <div
             className="tonearm-wrapper"
@@ -385,7 +413,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
           >
             <div className="tonearm-arm" />
             <div className="tonearm-headshell" />
-            <div className="tonearm-needle" />
+            <div className={`tonearm-needle${playing ? " tonearm-needle--playing" : ""}`} />
             <div className="tonearm-pivot-ball" />
           </div>
         </div>
