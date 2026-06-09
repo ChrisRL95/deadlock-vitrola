@@ -171,9 +171,12 @@ body {
       transparent 1px, transparent 4px
     ),
     radial-gradient(circle at center, #1a1a1a 0%, #0d0d0d 100%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  transform: translateX(0%);
   transition: transform 0.42s cubic-bezier(0.25, 1.0, 0.5, 1);
   z-index: 0;
   box-shadow: 4px 0 20px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.04);
@@ -228,7 +231,7 @@ body {
 }
 
 .disc-wrapper:hover .vinyl-peek {
-  transform: translate(20%, -50%);
+  transform: translateX(75%);
 }
 
 .album-cover {
