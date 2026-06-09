@@ -63,9 +63,6 @@ export default function Disc({ character, onClick }) {
             background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 40%, transparent 70%)`,
           }}
         />
-        <div className="disc-label">
-          <span>{character.name}</span>
-        </div>
       </div>
     </div>
   );
