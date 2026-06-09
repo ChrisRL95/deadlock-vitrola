@@ -404,7 +404,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
           <div className="controls-row">
             <button className="play-btn" onClick={togglePlay}
                     style={{ "--btn-color": accentColor }}>
-              {playing ? "⏸" : "▶"}
+              <span>{playing ? "⏸" : "▶"}</span>
             </button>
             <button
               className={`loop-btn ${loop ? "loop-btn--active" : ""}`}
