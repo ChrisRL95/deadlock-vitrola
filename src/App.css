@@ -188,6 +188,15 @@ body {
   color: rgba(255,255,255,0.3);
 }
 
+.album-cover-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+  border-radius: inherit;
+}
+
 .album-cover-overlay {
   position: absolute;
   inset: 0;
