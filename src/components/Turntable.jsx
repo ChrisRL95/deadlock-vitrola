@@ -74,6 +74,36 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   // keep playingRef in sync
   useEffect(() => { playingRef.current = playing; }, [playing]);
 
+  // sync state with real audio events (media keys, browser controls, etc.)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onPlay  = () => setPlaying(true);
+    const onPause = () => {
+      setPlaying(false);
+      // spin-down visually when paused externally
+      cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(spindownRafRef.current);
+      let lastT = performance.now();
+      const startTime = lastT;
+      const spinDown = (now) => {
+        const t = Math.min((now - startTime) / 600, 1);
+        const delta = now - lastT;
+        lastT = now;
+        discAngleRef.current = (discAngleRef.current + delta * NORMAL_DEG_PER_MS * (1 - t)) % 360;
+        setDiscAngle(discAngleRef.current);
+        if (t < 1) spindownRafRef.current = requestAnimationFrame(spinDown);
+      };
+      spindownRafRef.current = requestAnimationFrame(spinDown);
+    };
+    audio.addEventListener("play",  onPlay);
+    audio.addEventListener("pause", onPause);
+    return () => {
+      audio.removeEventListener("play",  onPlay);
+      audio.removeEventListener("pause", onPause);
+    };
+  }, []);
+
   // Track selection
   useEffect(() => {
     const elapsedMin = elapsed / 60;
@@ -131,10 +161,9 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   function togglePlay() {
     if (!audioRef.current) return;
     if (playing) {
-      // pause audio immediately
-      audioRef.current.pause();
+      // pause audio — the "pause" event listener will call setPlaying(false) + spinDown
       audioRef.current.playbackRate = 1.0;
-      setPlaying(false);
+      audioRef.current.pause();
       // cancel main spin loop NOW (don't wait for useEffect) to avoid double-advance
       cancelAnimationFrame(rafRef.current);
       // visual spin-down: disc decelerates over ~600ms using real delta time
@@ -154,9 +183,9 @@ export default function Turntable({ character, characters = [], onBack, onSelect
       spindownRafRef.current = requestAnimationFrame(spinDown);
     } else {
       // spin-up: start quiet then ramp pitch to normal
+      // the "play" event listener will call setPlaying(true)
       audioRef.current.playbackRate = 0.25;
       audioRef.current.play();
-      setPlaying(true);
       rampRate(audioRef.current, 0.25, 1.0, 700);
     }
   }
