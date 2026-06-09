@@ -31,7 +31,19 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const [pickerOpen, setPickerOpen] = useState(false);
   const [discAngle, setDiscAngle] = useState(0);
   const [loop, setLoop] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const accentColor = useDominantColor(character.render || character.image, character.color);
+
+  // parallax on render
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth  - 0.5) * 18;
+      const y = (e.clientY / window.innerHeight - 0.5) * 10;
+      setMousePos({ x, y });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   const audioRef = useRef(null);
   const intervalRef = useRef(null);
@@ -278,7 +290,15 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   return (
     <div className="turntable-page">
       {character.render && (
-        <img src={character.render} alt="" className="turntable-render" />
+        <img
+          src={character.render}
+          alt=""
+          className="turntable-render"
+          style={{
+            transform: `translate(${mousePos.x}px, ${mousePos.y}px)`,
+            transition: "transform 0.15s ease-out",
+          }}
+        />
       )}
 
       <button className="back-btn" onClick={onBack}>
