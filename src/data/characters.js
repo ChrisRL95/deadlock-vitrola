@@ -16,5 +16,20 @@ export const characters = [
       { label: "Abrams", start: 0, file: `${R2}/audio/Abrams.mp3` },
     ],
   },
+  {
+    id: "apollo",
+    name: "Apollo",
+    color: "#c0392b",
+    textColor: "#fff",
+    image: `${R2}/images/apollo.png`,
+    render: `${R2}/images/Apollo_Render.png`,
+    nameImage: `${R2}/images/apollo_name.png`,
+    icon: `${R2}/images/apollo-icon.png`,
+    desire: "O desejo de Apollo é desconhecido, mas ele parece lutar no ritual por Ixia — e para honrar o nome de sua família, testando seus limites em cada batalha.",
+    description: "O som de um jovem príncipe treinando para seu destino. Salões de esgrima iluminados pelo amanhecer, bandeiras reais tremulando ao vento e o eco de lâminas se cruzando em duelos de precisão absoluta. Uma mistura de nobreza, juventude e ambição, onde cada batalha é uma oportunidade de provar seu valor. A atmosfera combina disciplina aristocrática, espírito competitivo e a energia de alguém que acredita ter nascido para a grandeza. Não é a música de um rei consolidado, mas de um herdeiro determinado a conquistar seu lugar no mundo. Rápida, elegante, heroica e carregada pela certeza de que a vitória pertence aos preparados.",
+    tracks: [
+      { label: "Apollo", start: 0, file: `${R2}/audio/Apollo.mp3` },
+    ],
+  },
   // Add more characters here
 ];
