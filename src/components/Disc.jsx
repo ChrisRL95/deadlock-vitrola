@@ -39,9 +39,9 @@ export default function Disc({ character, onClick }) {
       onMouseLeave={handleMouseLeave}
       style={{
         transform: hovered
-          ? `perspective(600px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.04)`
-          : "perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)",
-        transition: hovered ? "transform 0.08s ease-out" : "transform 0.5s ease",
+          ? `perspective(600px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.05) translateY(-36px)`
+          : "perspective(600px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0px)",
+        transition: hovered ? "transform 0.1s ease-out" : "transform 0.5s cubic-bezier(0.34,1.2,0.64,1)",
         transformStyle: "preserve-3d",
         willChange: "transform",
       }}

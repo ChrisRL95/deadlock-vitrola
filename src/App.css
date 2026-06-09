@@ -111,41 +111,82 @@ body {
   gap: 0;
 }
 
+.shelf-section {
+  position: relative;
+}
+
 .shelf-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0 2px;
   padding-bottom: 0;
+  position: relative;
 }
 
 /* wooden plank under each row */
 .shelf-plank {
-  height: 14px;
-  background: linear-gradient(
-    to bottom,
-    #3a2a1a 0%,
-    #2a1e10 40%,
-    #1e1508 100%
-  );
+  height: 26px;
+  background:
+    linear-gradient(
+      to bottom,
+      #6b4420 0%,
+      #4a2e12 18%,
+      #311e0b 45%,
+      #251508 70%,
+      #1a0e05 100%
+    );
   box-shadow:
-    0 4px 12px rgba(0,0,0,0.7),
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    inset 0 -1px 0 rgba(0,0,0,0.4);
-  margin-bottom: 48px;
+    0 8px 24px rgba(0,0,0,0.85),
+    0 3px 8px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,190,90,0.18),
+    inset 0 -2px 4px rgba(0,0,0,0.6);
+  margin-top: -14px;   /* overlap the disc bottom — lip covers ~26px from disc bottom */
+  margin-bottom: 56px;
   position: relative;
+  /* DOM order (after shelf-row) ensures plank paints on top */
 }
 
+/* wood grain lines */
 .shelf-plank::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0px,
-    transparent 60px,
-    rgba(0,0,0,0.08) 60px,
-    rgba(0,0,0,0.08) 62px
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 38px,
+      rgba(0,0,0,0.10) 38px,
+      rgba(0,0,0,0.10) 40px,
+      transparent 40px,
+      transparent 72px,
+      rgba(255,160,60,0.04) 72px,
+      rgba(255,160,60,0.04) 74px
+    );
+  pointer-events: none;
+}
+
+/* front lip — protrudes above the plank */
+.shelf-plank::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 14px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,190,90,0.28) 0%,
+    #7a5228 25%,
+    #5a3618 60%,
+    #3d2410 100%
   );
+  box-shadow:
+    0 -2px 0 rgba(255,200,100,0.18),
+    inset 0 1px 0 rgba(255,220,120,0.35),
+    0 3px 8px rgba(0,0,0,0.5);
+  border-top: 1px solid rgba(255,200,90,0.25);
+  pointer-events: none;
 }
 
 /* ── DISC (shelf) ── */
@@ -156,6 +197,32 @@ body {
   align-items: center;
   gap: 10px;
   position: relative;
+}
+
+/* stacked disc illusion — two ghost discs offset behind */
+.disc-wrapper::before,
+.disc-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #1c1c1c 0%, #0e0e0e 100%);
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+.disc-wrapper::before {
+  transform: translate(5px, 4px);
+  filter: brightness(0.85);
+}
+
+.disc-wrapper::after {
+  transform: translate(10px, 8px);
+  filter: brightness(0.65);
 }
 
 .album-cover {
@@ -205,7 +272,6 @@ body {
 }
 
 .disc-wrapper:hover .album-cover {
-  transform: translateY(-8px);
   box-shadow: 6px 12px 28px rgba(0,0,0,0.8), -2px 0 8px rgba(0,0,0,0.3);
 }
 

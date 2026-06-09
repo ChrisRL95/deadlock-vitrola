@@ -45,7 +45,7 @@ export default function Shelf({ characters, onSelect }) {
 
       <div className="shelf">
         {rows.map((row, ri) => (
-          <div key={ri}>
+          <div key={ri} className="shelf-section">
             <div className="shelf-row">
               {row.map((item) =>
                 item.type === "char" ? (
