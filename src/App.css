@@ -81,7 +81,7 @@ body {
 
 .shelf-logo {
   display: block;
-  height: 48px;
+  height: 90px;
   width: auto;
   margin-bottom: 14px;
   /* iridescent shimmer via hue-rotate on a colorized base */
