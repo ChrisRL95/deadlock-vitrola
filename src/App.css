@@ -79,12 +79,18 @@ body {
   justify-content: space-between;
 }
 
+.shelf-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .shelf-logo {
   display: block;
-  height: 90px;
+  height: 72px;
   width: auto;
-  margin-bottom: 14px;
-  /* engraved dark bronze — desaturated, darkened base */
+  flex-shrink: 0;
+  /* engraved dark bronze */
   filter:
     saturate(0.35) brightness(0.7) contrast(1.15)
     drop-shadow(-1px -1px 0px rgba(180,150,100,0.55))
@@ -95,14 +101,17 @@ body {
 
 .shelf-header-left h1 {
   font-family: var(--font-cinzel-deco);
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1;
-  background: linear-gradient(135deg, #f0d080 0%, #c8a040 40%, #f5e0a0 65%, #b8880a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  /* engraved bronze text — same treatment as logo */
+  color: #9a8a6a;
+  text-shadow:
+    -1px -1px 0   rgba(180,150,100,0.5),
+     1px  1px 1px rgba(0,0,0,0.95),
+     0    4px 14px rgba(0,0,0,0.6);
 }
 
 .shelf-header-right {
