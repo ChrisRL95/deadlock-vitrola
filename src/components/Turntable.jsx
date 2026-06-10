@@ -114,18 +114,24 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     if (idx !== currentTrackIndex) setCurrentTrackIndex(idx);
   }, [elapsed, tracks]);
 
-  // Load track
+  // Reset track index and elapsed when character changes
+  useEffect(() => {
+    setCurrentTrackIndex(0);
+    setElapsed(0);
+  }, [character.id]);
+
+  // Load track (re-runs when track index OR character changes)
   useEffect(() => {
     if (!audioRef.current) return;
     const wasPlaying = playing;
     audioRef.current.src = tracks[currentTrackIndex].file;
-    audioRef.current.preservesPitch = false; // pitch follows speed (vinyl feel)
+    audioRef.current.preservesPitch = false;
     audioRef.current.load();
     audioRef.current.onloadedmetadata = () => {
       if (audioRef.current) setDuration(audioRef.current.duration);
     };
     if (wasPlaying) audioRef.current.play();
-  }, [currentTrackIndex]);
+  }, [currentTrackIndex, character.id]);
 
   // Timer + disc rAF spin
   useEffect(() => {
