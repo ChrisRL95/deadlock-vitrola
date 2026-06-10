@@ -88,14 +88,6 @@ body {
   filter:
     drop-shadow(0 0 10px rgba(200,170,100,0.4))
     drop-shadow(0 0 24px rgba(160,140,255,0.2));
-  animation: logo-iridescent 4s linear infinite;
-}
-
-@keyframes logo-iridescent {
-  0%   { filter: drop-shadow(0 0 10px rgba(200,170,100,0.5)) drop-shadow(0 0 20px rgba(160,140,255,0.25)) hue-rotate(0deg);   }
-  33%  { filter: drop-shadow(0 0 12px rgba(140,180,255,0.5)) drop-shadow(0 0 22px rgba(200,120,255,0.25)) hue-rotate(40deg);  }
-  66%  { filter: drop-shadow(0 0 12px rgba(200,120,200,0.5)) drop-shadow(0 0 22px rgba(255,180,100,0.25)) hue-rotate(80deg);  }
-  100% { filter: drop-shadow(0 0 10px rgba(200,170,100,0.5)) drop-shadow(0 0 20px rgba(160,140,255,0.25)) hue-rotate(0deg);   }
 }
 
 .shelf-header-left h1 {

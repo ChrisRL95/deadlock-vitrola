@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import Disc from "./Disc";
 
 const R2 = "https://pub-52e2be368e3442e2ac570de63276fa30.r2.dev";
@@ -15,15 +16,73 @@ function PlaceholderDisc() {
   );
 }
 
+function HoloLogo({ src, alt }) {
+  const [hue, setHue] = useState(0);
+  const [pos, setPos] = useState({ x: 0.5, y: 0.5 });
+  const rafRef = useRef(null);
+  const targetRef = useRef({ hue: 0, x: 0.5, y: 0.5 });
+  const currentRef = useRef({ hue: 0, x: 0.5, y: 0.5 });
+
+  useEffect(() => {
+    const onMove = (e) => {
+      targetRef.current.x = e.clientX / window.innerWidth;
+      targetRef.current.y = e.clientY / window.innerHeight;
+      // map X across full hue wheel
+      targetRef.current.hue = targetRef.current.x * 360;
+    };
+    window.addEventListener("mousemove", onMove);
+
+    // smooth lerp loop
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const tick = () => {
+      const t = 0.06;
+      currentRef.current.hue = lerp(currentRef.current.hue, targetRef.current.hue, t);
+      currentRef.current.x   = lerp(currentRef.current.x,   targetRef.current.x,   t);
+      currentRef.current.y   = lerp(currentRef.current.y,   targetRef.current.y,   t);
+      setHue(currentRef.current.hue);
+      setPos({ x: currentRef.current.x, y: currentRef.current.y });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  // primary glow colour matches current hue; secondary is complementary
+  const h1 = hue;
+  const h2 = (hue + 120) % 360;
+  const glowSize1 = 8 + pos.x * 14;
+  const glowSize2 = 6 + pos.y * 10;
+  const brightness = 0.9 + pos.x * 0.25;
+
+  const filter = [
+    `hue-rotate(${h1}deg)`,
+    `saturate(1.6)`,
+    `brightness(${brightness})`,
+    `drop-shadow(0 0 ${glowSize1}px hsla(${h1},90%,65%,0.65))`,
+    `drop-shadow(0 0 ${glowSize2}px hsla(${h2},80%,70%,0.35))`,
+  ].join(" ");
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="shelf-logo"
+      style={{ filter, transition: "filter 0.05s linear" }}
+    />
+  );
+}
+
 export default function Shelf({ characters, onSelect }) {
-  // fill to a multiple of COLS so rows are complete
   const total = Math.ceil(Math.max(characters.length, COLS) / COLS) * COLS;
   const items = [
     ...characters.map((char) => ({ type: "char", char })),
     ...Array.from({ length: total - characters.length }, (_, i) => ({ type: "empty", i })),
   ];
 
-  // split into rows of COLS
   const rows = [];
   for (let i = 0; i < items.length; i += COLS) {
     rows.push(items.slice(i, i + COLS));
@@ -37,7 +96,7 @@ export default function Shelf({ characters, onSelect }) {
       </div>
       <header className="shelf-header">
         <div className="shelf-header-left">
-          <img src={`${R2}/images/Logo.png`} alt="Deadlock" className="shelf-logo" />
+          <HoloLogo src={`${R2}/images/Logo.png`} alt="Deadlock" />
           <h1>Character Mixes</h1>
         </div>
         <div className="shelf-header-right">{characters.length} / 38 characters</div>
