@@ -37,8 +37,8 @@ export default function Shelf({ characters, onSelect }) {
       </div>
       <header className="shelf-header">
         <div className="shelf-header-left">
-          <span>Deadlock</span>
-          <h1>Character Discography</h1>
+          <img src={`${R2}/images/Logo.png`} alt="Deadlock" className="shelf-logo" />
+          <h1>Character Mixes</h1>
         </div>
         <div className="shelf-header-right">{characters.length} / 38 characters</div>
       </header>

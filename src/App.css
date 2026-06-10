@@ -79,22 +79,40 @@ body {
   justify-content: space-between;
 }
 
-.shelf-header-left span {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.35em;
-  color: var(--muted);
-  text-transform: uppercase;
+.shelf-logo {
   display: block;
-  margin-bottom: 10px;
+  height: 48px;
+  width: auto;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
 }
 
 .shelf-header-left h1 {
-  font-family: var(--font-cinzel);
-  font-size: 34px;
+  font-family: var(--font-cinzel-deco);
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   line-height: 1;
+  background: linear-gradient(
+    90deg,
+    #c8a96e 0%,
+    #f0d080 18%,
+    #a0c8ff 35%,
+    #d4a0ff 50%,
+    #ff9fd4 65%,
+    #f0d080 80%,
+    #c8a96e 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: iridescent-shift 5s linear infinite;
+}
+
+@keyframes iridescent-shift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .shelf-header-right {
