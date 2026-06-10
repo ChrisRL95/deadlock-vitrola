@@ -17,30 +17,21 @@ function PlaceholderDisc() {
 }
 
 function HoloLogo({ src, alt }) {
-  const [hue, setHue] = useState(0);
-  const [pos, setPos] = useState({ x: 0.5, y: 0.5 });
+  const [sheenX, setSheenX] = useState(-30);
   const rafRef = useRef(null);
-  const targetRef = useRef({ hue: 0, x: 0.5, y: 0.5 });
-  const currentRef = useRef({ hue: 0, x: 0.5, y: 0.5 });
+  const targetX = useRef(-30);
+  const currentX = useRef(-30);
 
   useEffect(() => {
     const onMove = (e) => {
-      targetRef.current.x = e.clientX / window.innerWidth;
-      targetRef.current.y = e.clientY / window.innerHeight;
-      // map X across full hue wheel
-      targetRef.current.hue = targetRef.current.x * 360;
+      // map cursor 0→window to sheen position -30 → 130 (% across logo)
+      targetX.current = (e.clientX / window.innerWidth) * 160 - 30;
     };
     window.addEventListener("mousemove", onMove);
 
-    // smooth lerp loop
-    const lerp = (a, b, t) => a + (b - a) * t;
     const tick = () => {
-      const t = 0.06;
-      currentRef.current.hue = lerp(currentRef.current.hue, targetRef.current.hue, t);
-      currentRef.current.x   = lerp(currentRef.current.x,   targetRef.current.x,   t);
-      currentRef.current.y   = lerp(currentRef.current.y,   targetRef.current.y,   t);
-      setHue(currentRef.current.hue);
-      setPos({ x: currentRef.current.x, y: currentRef.current.y });
+      currentX.current += (targetX.current - currentX.current) * 0.07;
+      setSheenX(currentX.current);
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -51,28 +42,23 @@ function HoloLogo({ src, alt }) {
     };
   }, []);
 
-  // primary glow colour matches current hue; secondary is complementary
-  const h1 = hue;
-  const h2 = (hue + 120) % 360;
-  const glowSize1 = 8 + pos.x * 14;
-  const glowSize2 = 6 + pos.y * 10;
-  const brightness = 0.9 + pos.x * 0.25;
-
-  const filter = [
-    `hue-rotate(${h1}deg)`,
-    `saturate(1.6)`,
-    `brightness(${brightness})`,
-    `drop-shadow(0 0 ${glowSize1}px hsla(${h1},90%,65%,0.65))`,
-    `drop-shadow(0 0 ${glowSize2}px hsla(${h2},80%,70%,0.35))`,
-  ].join(" ");
+  const x = sheenX;
+  const sheenGradient = `linear-gradient(
+    108deg,
+    transparent          ${x - 14}%,
+    rgba(255,245,200,0.0) ${x - 10}%,
+    rgba(255,245,200,0.4) ${x - 4}%,
+    rgba(255,255,235,0.85) ${x}%,
+    rgba(255,245,200,0.4) ${x + 4}%,
+    rgba(255,245,200,0.0) ${x + 10}%,
+    transparent          ${x + 14}%
+  )`;
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      className="shelf-logo"
-      style={{ filter, transition: "filter 0.05s linear" }}
-    />
+    <div className="shelf-logo-wrap">
+      <img src={src} alt={alt} className="shelf-logo" />
+      <div className="shelf-logo-sheen" style={{ background: sheenGradient }} />
+    </div>
   );
 }
 
