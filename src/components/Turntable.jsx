@@ -42,7 +42,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const [isDragging, setIsDragging] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [discAngle, setDiscAngle] = useState(0);
-  const [loop, setLoop] = useState(false);
+  const [loop, setLoop] = useState(true);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const accentColor = useDominantColor(character.render || character.image, character.color);
 
@@ -68,6 +68,7 @@ export default function Turntable({ character, characters = [], onBack, onSelect
   const spindownRafRef = useRef(null);
   const playingRef = useRef(false);   // shadow for rAF callbacks
   const wasPlayingRef = useRef(false); // was playing before drag started
+  const lastCharIdRef = useRef(character.id); // detect character changes in load effect
 
   const tracks = character.tracks;
 
@@ -114,23 +115,29 @@ export default function Turntable({ character, characters = [], onBack, onSelect
     if (idx !== currentTrackIndex) setCurrentTrackIndex(idx);
   }, [elapsed, tracks]);
 
-  // Reset track index and elapsed when character changes
-  useEffect(() => {
-    setCurrentTrackIndex(0);
-    setElapsed(0);
-  }, [character.id]);
-
-  // Load track (re-runs when track index OR character changes)
+  // Load track — re-runs when track index or character changes
   useEffect(() => {
     if (!audioRef.current) return;
-    const wasPlaying = playing;
+    const characterChanged = character.id !== lastCharIdRef.current;
+    lastCharIdRef.current = character.id;
+
+    if (characterChanged) {
+      // switching character: always start paused + reset position
+      audioRef.current.pause();
+      audioRef.current.playbackRate = 1.0;
+      setCurrentTrackIndex(0);
+      setElapsed(0);
+    }
+
+    const shouldPlay = characterChanged ? false : playing;
     audioRef.current.src = tracks[currentTrackIndex].file;
     audioRef.current.preservesPitch = false;
+    audioRef.current.loop = loop;
     audioRef.current.load();
     audioRef.current.onloadedmetadata = () => {
       if (audioRef.current) setDuration(audioRef.current.duration);
     };
-    if (wasPlaying) audioRef.current.play();
+    if (shouldPlay) audioRef.current.play();
   }, [currentTrackIndex, character.id]);
 
   // Timer + disc rAF spin
@@ -411,29 +418,31 @@ export default function Turntable({ character, characters = [], onBack, onSelect
 
         {/* Disc */}
         <div className="turntable-disc-area">
-          <div
-            ref={discRef}
-            className="turntable-disc"
-            style={{
-              "--disc-color": accentColor,
-              transform: `rotate(${discAngle}deg)`,
-              cursor: isDragging ? "grabbing" : "grab",
-            }}
-            onMouseDown={onDiscMouseDown}
-            onTouchStart={onDiscMouseDown}
-          >
-            <div className="disc-ring" />
-            <div className="disc-center">
-              {character.image ? (
-                <img src={character.image} alt={character.name} />
-              ) : (
-                <span>{character.name[0]}</span>
-              )}
+          <div key={character.id} className="disc-drop-wrapper">
+            <div
+              ref={discRef}
+              className="turntable-disc"
+              style={{
+                "--disc-color": accentColor,
+                transform: `rotate(${discAngle}deg)`,
+                cursor: isDragging ? "grabbing" : "grab",
+              }}
+              onMouseDown={onDiscMouseDown}
+              onTouchStart={onDiscMouseDown}
+            >
+              <div className="disc-ring" />
+              <div className="disc-center">
+                {character.image ? (
+                  <img src={character.image} alt={character.name} />
+                ) : (
+                  <span>{character.name[0]}</span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Fixed light reflection — stays in place while disc rotates beneath */}
-          <div className="vinyl-shine" />
+          <div className="vinyl-shine" key={character.id + "-shine"} />
 
           {/* Dust particles — appear while playing */}
           <div className={`dust-particles${playing ? " dust-active" : ""}`}>
