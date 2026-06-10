@@ -32,8 +32,8 @@ export default function Shelf({ characters, onSelect }) {
   return (
     <div className="shelf-page">
       <div className="shelf-bg">
-        <img src={`${R2}/images/HiddenKing.png`} alt="" className="shelf-bg-left" />
-        <img src={`${R2}/images/Archmother.png`} alt="" className="shelf-bg-right" />
+        <img src={`${R2}/images/Archmother.png`} alt="" className="shelf-bg-left" />
+        <img src={`${R2}/images/HiddenKing.png`} alt="" className="shelf-bg-right" />
       </div>
       <header className="shelf-header">
         <div className="shelf-header-left">
