@@ -84,7 +84,18 @@ body {
   height: 48px;
   width: auto;
   margin-bottom: 14px;
-  filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
+  /* iridescent shimmer via hue-rotate on a colorized base */
+  filter:
+    drop-shadow(0 0 10px rgba(200,170,100,0.4))
+    drop-shadow(0 0 24px rgba(160,140,255,0.2));
+  animation: logo-iridescent 4s linear infinite;
+}
+
+@keyframes logo-iridescent {
+  0%   { filter: drop-shadow(0 0 10px rgba(200,170,100,0.5)) drop-shadow(0 0 20px rgba(160,140,255,0.25)) hue-rotate(0deg);   }
+  33%  { filter: drop-shadow(0 0 12px rgba(140,180,255,0.5)) drop-shadow(0 0 22px rgba(200,120,255,0.25)) hue-rotate(40deg);  }
+  66%  { filter: drop-shadow(0 0 12px rgba(200,120,200,0.5)) drop-shadow(0 0 22px rgba(255,180,100,0.25)) hue-rotate(80deg);  }
+  100% { filter: drop-shadow(0 0 10px rgba(200,170,100,0.5)) drop-shadow(0 0 20px rgba(160,140,255,0.25)) hue-rotate(0deg);   }
 }
 
 .shelf-header-left h1 {
@@ -93,26 +104,10 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1;
-  background: linear-gradient(
-    90deg,
-    #c8a96e 0%,
-    #f0d080 18%,
-    #a0c8ff 35%,
-    #d4a0ff 50%,
-    #ff9fd4 65%,
-    #f0d080 80%,
-    #c8a96e 100%
-  );
-  background-size: 200% auto;
+  background: linear-gradient(135deg, #f0d080 0%, #c8a040 40%, #f5e0a0 65%, #b8880a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: iridescent-shift 5s linear infinite;
-}
-
-@keyframes iridescent-shift {
-  0%   { background-position: 0% center; }
-  100% { background-position: 200% center; }
 }
 
 .shelf-header-right {
