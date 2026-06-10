@@ -55,6 +55,7 @@ body {
 
 .shelf-bg-left {
   left: 0;
+  transform: scaleX(-1);
   mask-image: linear-gradient(to right, rgba(0,0,0,0.8) 0%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.8) 0%, transparent 100%);
 }
