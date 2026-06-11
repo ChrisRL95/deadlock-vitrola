@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 
-export default function Disc({ character, onClick }) {
+export default function Disc({ character, onPlay, onInspect }) {
   const cardRef = useRef(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [tilt, setTilt]   = useState({ x: 0, y: 0 });
   const [shine, setShine] = useState({ x: 50, y: 50 });
   const [hovered, setHovered] = useState(false);
 
@@ -12,28 +12,19 @@ export default function Disc({ character, onClick }) {
     const rect = card.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (rect.width / 2);   // -1 to 1
-    const dy = (e.clientY - cy) / (rect.height / 2);  // -1 to 1
-    setTilt({ x: -dy * 12, y: dx * 12 }); // max 12° tilt
-    // shine position as % for the gradient
-    const sx = ((e.clientX - rect.left) / rect.width) * 100;
-    const sy = ((e.clientY - rect.top) / rect.height) * 100;
-    setShine({ x: sx, y: sy });
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    setTilt({ x: -dy * 12, y: dx * 12 });
+    setShine({ x: ((e.clientX - rect.left) / rect.width) * 100, y: ((e.clientY - rect.top) / rect.height) * 100 });
   }
 
   function handleMouseEnter() { setHovered(true); }
-
-  function handleMouseLeave() {
-    setHovered(false);
-    setTilt({ x: 0, y: 0 });
-    setShine({ x: 50, y: 50 });
-  }
+  function handleMouseLeave() { setHovered(false); setTilt({ x: 0, y: 0 }); setShine({ x: 50, y: 50 }); }
 
   return (
     <div
       className="disc-wrapper"
       ref={cardRef}
-      onClick={() => onClick(character)}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -55,7 +46,6 @@ export default function Disc({ character, onClick }) {
           </div>
         )}
         <div className="album-cover-overlay" />
-        {/* shine layer */}
         <div
           className="album-cover-shine"
           style={{
@@ -63,6 +53,29 @@ export default function Disc({ character, onClick }) {
             background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 40%, transparent 70%)`,
           }}
         />
+
+        {/* Hover action buttons */}
+        <div className={`disc-hover-actions${hovered ? " disc-hover-actions--visible" : ""}`}>
+          {/* Center play button */}
+          <button
+            className="disc-play-btn"
+            onClick={e => { e.stopPropagation(); onPlay(character); }}
+            aria-label={`Tocar ${character.name}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M7 4.5L15.5 10L7 15.5V4.5Z" fill="currentColor"/>
+            </svg>
+          </button>
+
+          {/* Inspect button — bottom-left */}
+          <button
+            className="disc-inspect-btn"
+            onClick={e => { e.stopPropagation(); onInspect(character); }}
+            aria-label={`Inspecionar ${character.name}`}
+          >
+            i
+          </button>
+        </div>
       </div>
     </div>
   );

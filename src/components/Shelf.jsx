@@ -16,7 +16,7 @@ function PlaceholderDisc() {
 }
 
 
-export default function Shelf({ characters, onSelect }) {
+export default function Shelf({ characters, onPlay, onInspect }) {
   const total = Math.ceil(Math.max(characters.length, COLS) / COLS) * COLS;
   const items = [
     ...characters.map((char) => ({ type: "char", char })),
@@ -48,7 +48,7 @@ export default function Shelf({ characters, onSelect }) {
             <div className="shelf-row">
               {row.map((item) =>
                 item.type === "char" ? (
-                  <Disc key={item.char.id} character={item.char} onClick={onSelect} />
+                  <Disc key={item.char.id} character={item.char} onPlay={onPlay} onInspect={onInspect} />
                 ) : (
                   <PlaceholderDisc key={`empty-${item.i}`} />
                 )

@@ -292,6 +292,116 @@ body {
   box-shadow: 6px 12px 28px rgba(0,0,0,0.8), -2px 0 8px rgba(0,0,0,0.3);
 }
 
+/* ── Hover action buttons on shelf disc ── */
+.disc-hover-actions {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.disc-hover-actions--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Center play button */
+.disc-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.88);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: radial-gradient(circle at 40% 35%,
+    rgba(255,255,255,0.12) 0%,
+    rgba(255,255,255,0.04) 60%,
+    rgba(0,0,0,0.18) 100%
+  );
+  color: rgba(255,255,255,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 2px 16px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+  transition: all 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+  opacity: 0;
+}
+
+.disc-hover-actions--visible .disc-play-btn {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.disc-play-btn:hover {
+  border-color: rgba(255,255,255,0.38);
+  background: radial-gradient(circle at 40% 35%,
+    rgba(255,255,255,0.2) 0%,
+    rgba(255,255,255,0.08) 60%,
+    rgba(0,0,0,0.1) 100%
+  );
+  color: #fff;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.5),
+    0 0 20px rgba(255,255,255,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.disc-play-btn svg {
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+  position: relative;
+  left: 1px; /* optical centering */
+}
+
+/* Inspect "i" button — bottom-left */
+.disc-inspect-btn {
+  position: absolute;
+  bottom: 9px;
+  left: 9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.38);
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-cinzel);
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(0.8);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.disc-hover-actions--visible .disc-inspect-btn {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 0.06s;
+}
+
+.disc-inspect-btn:hover {
+  border-color: rgba(255,255,255,0.5);
+  background: rgba(0,0,0,0.6);
+  color: rgba(255,255,255,0.9);
+  transform: scale(1.15);
+}
+
 
 .album-cover-placeholder-slot {
   background: var(--surface) !important;
@@ -1128,10 +1238,377 @@ body {
   opacity: 0.7;
 }
 
+/* ── DISC INSPECTOR MODAL ── */
+.inspector-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(4, 3, 6, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: inspector-overlay-in 0.3s ease both;
+}
+
+@keyframes inspector-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.inspector-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  animation: inspector-modal-in 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes inspector-modal-in {
+  from { transform: scale(0.82) translateY(24px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* ── Stage: sleeve + vinyl stacked ── */
+.inspector-stage {
+  position: relative;
+  width: 520px;
+  height: 720px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* ── Vinyl disc (behind sleeve) ── */
+.inspector-vinyl {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 1;
+  transition: transform 0.72s cubic-bezier(0.34, 1.15, 0.64, 1);
+  width: 490px;
+  height: 490px;
+}
+
+.inspector-vinyl--out {
+  transform: translateX(-50%) translateY(-220px);
+  z-index: 3;
+}
+
+.inspector-vinyl-disc {
+  width: 490px;
+  height: 490px;
+  border-radius: 50%;
+  overflow: hidden; /* clips shine to circle */
+  background: #0e0e0e;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 16px 48px rgba(0,0,0,0.9);
+}
+
+.inspector-vinyl-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle at center,
+    rgba(255,255,255,0.025) 0px,
+    rgba(255,255,255,0.025) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+.inspector-vinyl-label {
+  width: 175px;
+  height: 175px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 3px rgba(0,0,0,0.7),
+    0 0 0 4px rgba(255,255,255,0.05);
+  z-index: 1;
+}
+
+.inspector-vinyl-label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.75) saturate(0.8);
+}
+
+.inspector-vinyl-hole {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #050505;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,1);
+  z-index: 2;
+}
+
+/* ── Album cover flip card ── */
+.inspector-cover-flip {
+  position: relative;
+  width: 520px;
+  height: 520px;
+  z-index: 2;
+  flex-shrink: 0;
+  cursor: default;
+  will-change: transform;
+}
+
+.inspector-cover-inner {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.68s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inspector-cover-flip--back .inspector-cover-inner {
+  transform: rotateY(180deg);
+}
+
+.inspector-cover-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  box-shadow:
+    0 24px 64px rgba(0,0,0,0.85),
+    0  8px 24px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.inspector-cover-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.inspector-cover-tilt-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.inspector-cover-back {
+  transform: rotateY(180deg);
+  background: #0a0a0a;
+}
+
+.inspector-cover-back-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 65%);
+}
+
+.inspector-back-description {
+  font-family: var(--font-cinzel);
+  font-size: 11px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.65);
+  font-style: italic;
+}
+
+/* ── A: cover entry animation ── */
+.inspector-cover-enter {
+  position: relative;
+  z-index: 2;
+  animation: cover-enter 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cover-enter {
+  from {
+    transform: perspective(900px) scale(0.9) translateY(28px);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    transform: perspective(900px) scale(1) translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* ── Character name — E: directional slide ── */
+.inspector-name {
+  font-family: var(--font-cinzel-deco);
+  font-size: 22px;
+  letter-spacing: 0.12em;
+  color: #9a8a6a;
+  text-shadow:
+    -1px -1px 0   rgba(180,150,100,0.45),
+     1px  1px 1px rgba(0,0,0,0.95),
+     0    4px 14px rgba(0,0,0,0.6);
+  text-align: center;
+  animation: name-slide-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.inspector-name--slide-right {
+  --name-from: 32px;
+}
+.inspector-name--slide-left {
+  --name-from: -32px;
+}
+
+@keyframes name-slide-in {
+  from { transform: translateX(var(--name-from, 32px)); opacity: 0; }
+  to   { transform: translateX(0);                      opacity: 1; }
+}
+
+/* ── F: position dots ── */
+.inspector-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  margin-top: -8px;
+}
+
+.inspector-dot {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.inspector-dot--active {
+  width: 28px;
+  background: rgba(180,150,100,0.7);
+  box-shadow: 0 0 6px rgba(180,150,100,0.4);
+}
+
+/* ── Action buttons ── */
+.inspector-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.inspector-btn {
+  padding: 11px 26px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.65);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.inspector-btn:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%);
+  border-color: rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.95);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.inspector-btn--primary {
+  background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.8);
+}
+
+.inspector-btn--play {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--btn-color, #888) 25%, transparent),
+    color-mix(in srgb, var(--btn-color, #888) 10%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--btn-color, #888) 55%, transparent);
+  color: #fff;
+  box-shadow:
+    0 4px 20px color-mix(in srgb, var(--btn-color, #888) 35%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.inspector-btn--play:hover {
+  box-shadow:
+    0 6px 28px color-mix(in srgb, var(--btn-color, #888) 55%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  filter: brightness(1.1);
+}
+
+/* ── Navigation arrows ── */
+.inspector-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(10,10,10,0.7);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.inspector-nav:hover {
+  border-color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.95);
+  background: rgba(30,30,30,0.9);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.inspector-nav--prev { left: -72px; }
+.inspector-nav--next { right: -72px; }
+
+/* ── Close / Back ── */
+.inspector-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.inspector-close:hover {
+  color: rgba(255,255,255,0.75);
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 700px) {
   .turntable-layout { flex-direction: column; gap: 40px; }
   .turntable-disc   { width: 220px; height: 220px; }
   .shelf-page       { padding: 40px 20px; }
   .turntable-page   { padding: 24px 20px; }
+  .inspector-nav--prev { left: -52px; }
+  .inspector-nav--next { right: -52px; }
 }
